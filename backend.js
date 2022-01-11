@@ -1,4 +1,6 @@
 const express = require('express');
+const cors = require('cors');
+const uuid = require('uuid');
 const app = express();
 const port = 5000;
 
@@ -33,6 +35,7 @@ const users = {
    ]
 }
 
+app.use(cors());
 app.use(express.json());
 
 app.get('/', (req, res) => {
@@ -46,7 +49,7 @@ app.listen(port, () => {
 app.get('/users', (req, res) => {
   const name = req.query.name;
   const job = req.query.job;
-  console.log(`${name} ${job}`);
+  //console.log(`${name} ${job}`);
   if(name != undefined && job != undefined) {
     let result = findUserByNameAndJob(name, job);
     result = {users_list: result};
@@ -99,12 +102,15 @@ const findUserById = (id) => {
 
 app.post('/users', (req, res) => {
     const userToAdd = req.body;
-    addUser(userToAdd);
-    res.status(200).end();
+    updatedUser = addUser(userToAdd);
+    res.status(201).send(updatedUser);
 });
 
 function addUser(user) {
+    if (user['id'] == undefined)
+      user['id'] = uuid.v4();
     users['users_list'].push(user);
+    return user;
 }
 
 app.delete('/users/:id', (req, res) => {
@@ -112,7 +118,7 @@ app.delete('/users/:id', (req, res) => {
   let result = findUserById(id);
   if(result != undefined && result.length != 0) {
     deleteUser(id);
-    res.status(200).end();
+    res.status(204).end();
   }
   else {
     res.status(404).send('Resource not found.');
@@ -120,7 +126,5 @@ app.delete('/users/:id', (req, res) => {
 });
 
 function deleteUser(id) {
-  console.log(users['users_list']);
   users['users_list'] = users['users_list'].filter( (user) => user['id'] != id);
-  console.log(users['users_list']);
 }
